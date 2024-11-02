@@ -9,6 +9,13 @@ import cv2
 
 from tqdm import tqdm
 
+has_musa = False
+try:
+    import torch_musa
+    has_musa = True
+except ImportError:
+    pass
+
 class VideoTester():
     def __init__(self, args, my_model, ckp):
         self.args = args
@@ -63,7 +70,7 @@ class VideoTester():
         torch.set_grad_enabled(True)
 
     def prepare(self, *args):
-        device = torch.device('cpu' if self.args.cpu else 'cuda')
+        device = torch.device('cpu' if args.cpu else 'musa' if has_musa else 'cuda')
         def _prepare(tensor):
             if self.args.precision == 'half': tensor = tensor.half()
             return tensor.to(device)

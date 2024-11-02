@@ -8,6 +8,13 @@ import torch
 import torch.nn.utils as utils
 from tqdm import tqdm
 
+has_musa = False
+try:
+    import torch_musa
+    has_musa = True
+except ImportError:
+    pass
+
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss, ckp):
         self.args = args
@@ -132,7 +139,9 @@ class Trainer():
         if self.args.cpu:
             device = torch.device('cpu')
         else:
-            if torch.backends.mps.is_available():
+            if has_musa:
+                device = torch.device('musa')
+            elif torch.backends.mps.is_available():
                 device = torch.device('mps')
             elif torch.cuda.is_available():
                 device = torch.device('cuda')

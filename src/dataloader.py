@@ -19,6 +19,12 @@ from torch.utils.data._utils.worker import ManagerWatchdog
 
 from torch._six import queue
 
+has_musa = False
+try:
+    import torch_musa
+    has_musa = True
+except ImportError:
+    pass
 def _ms_loop(dataset, index_queue, data_queue, done_event, collate_fn, scale, seed, init_fn, worker_id):
     try:
         collate._use_shared_memory = True
@@ -73,7 +79,7 @@ class _MSDataLoaderIter(_DataLoaderIter):
         self.collate_fn = loader.collate_fn
         self.batch_sampler = loader.batch_sampler
         self.num_workers = loader.num_workers
-        self.pin_memory = loader.pin_memory and torch.cuda.is_available()
+        self.pin_memory = loader.pin_memory and (has_musa or torch.cuda.is_available())
         self.timeout = loader.timeout
 
         self.sample_iter = iter(self.batch_sampler)
@@ -125,7 +131,7 @@ class _MSDataLoaderIter(_DataLoaderIter):
                     args=(
                         self.worker_result_queue,
                         self.data_queue,
-                        torch.cuda.current_device(),
+                        torch.musa.current_device() if has_musa else torch.cuda.current_device(),
                         self.done_event
                     )
                 )

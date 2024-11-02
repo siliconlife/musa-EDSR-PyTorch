@@ -6,6 +6,13 @@ import torch.nn as nn
 import torch.nn.parallel as P
 import torch.utils.model_zoo
 
+has_musa = False
+try:
+    import torch_musa
+    has_musa = True
+except ImportError:
+    pass
+
 class Model(nn.Module):
     def __init__(self, args, ckp):
         super(Model, self).__init__()
@@ -21,7 +28,9 @@ class Model(nn.Module):
         if self.cpu:
             self.device = torch.device('cpu')
         else:
-            if torch.backends.mps.is_available():
+            if has_musa:
+                self.device = torch.device('musa')
+            elif torch.backends.mps.is_available():
                 self.device = torch.device('mps')
             elif torch.cuda.is_available():
                 self.device = torch.device('cuda')

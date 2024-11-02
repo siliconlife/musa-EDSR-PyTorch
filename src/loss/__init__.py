@@ -11,6 +11,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+has_musa = False
+try:
+    import torch_musa
+    has_musa = True
+except ImportError:
+    pass
+
 class Loss(nn.modules.loss._Loss):
     def __init__(self, args, ckp):
         super(Loss, self).__init__()
@@ -56,7 +63,7 @@ class Loss(nn.modules.loss._Loss):
 
         self.log = torch.Tensor()
 
-        device = torch.device('cpu' if args.cpu else 'cuda')
+        device = torch.device('cpu' if args.cpu else 'musa' if has_musa else 'cuda')
         self.loss_module.to(device)
         if args.precision == 'half': self.loss_module.half()
         if not args.cpu and args.n_GPUs > 1:
